@@ -32,7 +32,7 @@ public class InMemoryUserRepository implements UserRepository{
     }
 
     @Override
-    public Optional<User> findById(Long id) {
+    public Optional<User> findById(UUID id) {
         return Optional.ofNullable(users.get(id));
     }
 

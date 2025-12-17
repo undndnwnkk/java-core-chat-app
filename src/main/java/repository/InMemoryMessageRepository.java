@@ -16,6 +16,7 @@ public class InMemoryMessageRepository implements MessageRepository{
 
     @Override
     public Message save(Message message) {
+        if (message.getId() == null) message.setId(generateId());
         messages.put(message.getId(), message);
         return message;
     }
@@ -23,5 +24,9 @@ public class InMemoryMessageRepository implements MessageRepository{
     @Override
     public List<Message> findAll() {
         return messages.values().stream().toList();
+    }
+
+    private UUID generateId() {
+        return UUID.randomUUID();
     }
 }

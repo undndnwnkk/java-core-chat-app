@@ -7,6 +7,8 @@ import exception.UserNotFoundException;
 import model.User;
 import repository.InMemoryUserRepository;
 
+import java.util.UUID;
+
 
 public class UserService {
     private final InMemoryUserRepository userRepository;
@@ -34,5 +36,9 @@ public class UserService {
         } else {
             throw new IncorrectPasswordException("Incorrect password");
         }
+    }
+    public User findById(UUID id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 }
