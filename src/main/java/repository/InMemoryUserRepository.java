@@ -1,6 +1,9 @@
 package repository;
 
+import dto.CreateUserDto;
+import exception.HashPasswordException;
 import model.User;
+import java.security.MessageDigest;
 
 import java.util.*;
 
@@ -12,7 +15,11 @@ public class InMemoryUserRepository implements UserRepository{
     }
 
     @Override
-    public void save(User user) {
+    public void save(CreateUserDto createUserDto) {
+        User user = new User();
+        user.setId(generateId());
+        user.setUsername(createUserDto.getUsername());
+        user.setPasswordHash(hashPassword(createUserDto.getPassword()));
         users.put(user.getId(), user);
     }
 
@@ -41,5 +48,19 @@ public class InMemoryUserRepository implements UserRepository{
 
     private UUID generateId() {
         return UUID.randomUUID();
+    }
+
+    private String hashPassword(String password) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(password.getBytes());
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (Exception e) {
+            throw new HashPasswordException("Error hashing password", e);
+        }
+    }
+
+    public boolean verifyPassword(String password, String hashedPassword) {
+        return hashPassword(password).equals(hashedPassword);
     }
 }

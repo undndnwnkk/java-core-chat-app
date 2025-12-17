@@ -1,5 +1,22 @@
 plugins {
     id 'java'
+    id 'application'
+}
+
+application {
+    mainClass = 'Main'
+}
+
+run {
+    standardInput = System.in
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': application.mainClass
+        )
+    }
 }
 
 group = 'com.alfa-hackathon'
