@@ -5,14 +5,14 @@ import java.util.UUID;
 
 public class Message {
     private UUID id;
-    private Long senderId;
+    private UUID senderId;
     private String text;
     private LocalDateTime timestamp;
 
     public Message() {
     }
 
-    public Message(UUID id, Long senderId, String text, LocalDateTime timestamp) { // TODO Autogenerate Id
+    public Message(UUID id, UUID senderId, String text, LocalDateTime timestamp) { // TODO Autogenerate Id
         this.id = id;
         this.senderId = senderId;
         this.text = text;
@@ -27,11 +27,11 @@ public class Message {
         this.id = id;
     }
 
-    public Long getSenderId() {
+    public UUID getSenderId() {
         return senderId;
     }
 
-    public void setSenderId(Long senderId) {
+    public void setSenderId(UUID senderId) {
         this.senderId = senderId;
     }
 
@@ -49,5 +49,12 @@ public class Message {
 
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
+    }
+
+    @Override
+    public String toString() {
+        return timestamp.toString() +
+                " Sender ID: " + senderId.toString() +
+                ": " + text;
     }
 }

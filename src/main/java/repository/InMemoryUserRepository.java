@@ -15,12 +15,13 @@ public class InMemoryUserRepository implements UserRepository{
     }
 
     @Override
-    public void save(CreateUserDto createUserDto) {
+    public User save(CreateUserDto createUserDto) {
         User user = new User();
         user.setId(generateId());
         user.setUsername(createUserDto.getUsername());
         user.setPasswordHash(hashPassword(createUserDto.getPassword()));
         users.put(user.getId(), user);
+        return user;
     }
 
     @Override

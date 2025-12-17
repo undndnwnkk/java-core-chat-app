@@ -7,6 +7,7 @@ import exception.UserNotFoundException;
 import model.User;
 import repository.InMemoryUserRepository;
 
+
 public class UserService {
     private final InMemoryUserRepository userRepository;
 
@@ -14,22 +15,22 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public void registerUser(CreateUserDto createUserDto) {
+    public User registerUser(CreateUserDto createUserDto) {
         if (userRepository.isUserExists(createUserDto.getUsername())) {
             throw new UserAlreadyExistsException("User with this email already exists");
         } else {
             if (createUserDto.getPassword().length() < 8) throw new IncorrectPasswordException("Password is too short");
-            userRepository.save(createUserDto);
+            return userRepository.save(createUserDto);
         }
     }
 
-    public boolean login(CreateUserDto createUserDto) {
+    public User login(CreateUserDto createUserDto) {
         User currentUser = userRepository.findByUsername(createUserDto.getUsername())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (userRepository.verifyPassword(createUserDto.getPassword(), currentUser.getPasswordHash())) {
             System.out.println("Login successful");
-            return true;
+            return currentUser;
         } else {
             throw new IncorrectPasswordException("Incorrect password");
         }

@@ -2,6 +2,7 @@ import dto.CreateUserDto;
 import exception.IncorrectPasswordException;
 import exception.UserAlreadyExistsException;
 import exception.UserNotFoundException;
+import model.User;
 import repository.InMemoryUserRepository;
 import service.UserService;
 
@@ -18,8 +19,14 @@ public class Main {
         System.out.println("2. register");
         Scanner scanner = new Scanner(System.in);
 
+        User currentUser = chooseEntryOption(scanner.nextLine(), userService);
+
+
+    }
+
+    private static User chooseEntryOption(String choice, UserService userService) {
         try {
-            String choice = scanner.nextLine();
+            Scanner scanner = new Scanner(System.in);
             if (choice.equalsIgnoreCase("login") ||
                     choice.equals("1")) {
                 while (true) {
@@ -30,9 +37,7 @@ public class Main {
 
                     CreateUserDto createUserDto = new CreateUserDto(username, password);
                     try {
-                        userService.login(createUserDto);
-                        System.out.println("Login was successful");
-                        break;
+                        return userService.login(createUserDto);
                     } catch (UserNotFoundException e) {
                         System.out.println("Not found user with this username, please try again\n");
                     }
@@ -49,9 +54,7 @@ public class Main {
 
                     if (password.equals(confirmPassword)) {
                         try {
-                            userService.registerUser(new CreateUserDto(username, password));
-                            System.out.println("Registration successful");
-                            break;
+                            return userService.registerUser(new CreateUserDto(username, password));
                         } catch (IncorrectPasswordException e) {
                             System.out.println(e.getMessage());
                         }
@@ -68,9 +71,14 @@ public class Main {
                         System.out.println(e.getMessage());
                     }
                 }
+            } else {
+                System.out.println("Unknown command, try again");
+                chooseEntryOption(scanner.nextLine(), userService);
             }
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
         }
+
+        return null;
     }
 }
