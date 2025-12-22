@@ -5,15 +5,15 @@ import exception.IncorrectPasswordException;
 import exception.UserAlreadyExistsException;
 import exception.UserNotFoundException;
 import model.User;
-import repository.InMemoryUserRepository;
+import repository.UserRepository;
 
 import java.util.UUID;
 
 
 public class UserService {
-    private final InMemoryUserRepository userRepository;
+    private final UserRepository userRepository;
 
-    public UserService(InMemoryUserRepository userRepository) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 

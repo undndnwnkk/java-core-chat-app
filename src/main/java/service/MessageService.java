@@ -3,16 +3,15 @@ package service;
 import dto.MessageView;
 import model.Message;
 import model.User;
-import repository.InMemoryMessageRepository;
-import repository.InMemoryUserRepository;
+import repository.MessageRepository;
 
 import java.time.LocalDateTime;
 
 public class MessageService {
-    private final InMemoryMessageRepository messageRepository;
+    private final MessageRepository messageRepository;
     private final UserService userService;
 
-    public MessageService(InMemoryMessageRepository messageRepository, UserService userService) {
+    public MessageService(MessageRepository messageRepository, UserService userService) {
         this.messageRepository = messageRepository;
         this.userService = userService;
     }

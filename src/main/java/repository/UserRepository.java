@@ -13,4 +13,5 @@ public interface UserRepository {
     Optional<User> findById(UUID id);
     List<User> findAll();
     boolean isUserExists(String username);
+    boolean verifyPassword(String password, String passwordHash);
 }
