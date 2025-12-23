@@ -1,6 +1,6 @@
 package repository;
 
-import dto.CreateUserDto;
+import model.CreateUserDto;
 import model.User;
 
 import java.util.List;

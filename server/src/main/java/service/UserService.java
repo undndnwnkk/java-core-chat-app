@@ -1,6 +1,6 @@
 package service;
 
-import dto.CreateUserDto;
+import model.CreateUserDto;
 import exception.IncorrectPasswordException;
 import exception.UserAlreadyExistsException;
 import exception.UserNotFoundException;

@@ -1,6 +1,6 @@
 package service;
 
-import dto.MessageView;
+import model.MessageView;
 import model.Message;
 import model.User;
 import repository.MessageRepository;

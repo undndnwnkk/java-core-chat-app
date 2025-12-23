@@ -1,1 +1,4 @@
 rootProject.name = 'java-core-chat-app'
+include 'common'
+include 'server'
+include 'client'

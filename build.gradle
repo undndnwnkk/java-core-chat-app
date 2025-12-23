@@ -3,33 +3,31 @@ plugins {
     id 'application'
 }
 
-application {
-    mainClass = 'Main'
-}
+allprojects {
+    group = 'com.java-chat'
+    version = '1.0'
 
-run {
-    standardInput = System.in
-}
-
-jar {
-    manifest {
-        attributes(
-                'Main-Class': application.mainClass
-        )
+    repositories {
+        mavenCentral()
     }
 }
 
-group = 'com.alfa-hackathon'
-version = '1.0-SNAPSHOT'
+subprojects {
+    apply plugin: 'java'
 
-repositories {
-    mavenCentral()
-}
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
 
-dependencies {
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    dependencies {
+        testImplementation platform('org.junit:junit-bom:5.10.0')
+        testImplementation 'org.junit.jupiter:junit-jupiter'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+        implementation 'com.google.code.gson:gson:2.10.1'
+        implementation 'org.slf4j:slf4j-api:2.0.9'
+        implementation 'org.slf4j:slf4j-simple:2.0.9'
+    }
 }
 
 test {
