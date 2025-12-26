@@ -56,6 +56,22 @@ public class ClientApp {
 
     private static void chatLoop(ClientService clientService, Gson gson,
                                  PrintWriter out, BufferedReader in, String token) throws IOException {
+        Thread readerThread = new Thread(() -> {
+            try {
+                while(!Thread.currentThread().isInterrupted()) {
+                    String jsonResponse = in.readLine();
+                    if (jsonResponse == null) break;
+
+                    ServerResponse response = gson.fromJson(jsonResponse, ServerResponse.class);
+                    handleChatResponse(response);
+                }
+            } catch (IOException e) {
+                System.out.println("Чтение прервано");
+            }
+        });
+
+        readerThread.start();
+
         while (true) {
             ClientCommandRequest request = clientService.chatRequestCreator(token);
 
@@ -75,11 +91,6 @@ public class ClientApp {
             }
 
             out.println(gson.toJson(request));
-
-            String jsonResponse = in.readLine();
-            ServerResponse response = gson.fromJson(jsonResponse, ServerResponse.class);
-
-            handleChatResponse(response);
         }
     }
 
