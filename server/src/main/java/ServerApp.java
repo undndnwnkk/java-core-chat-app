@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -30,6 +31,19 @@ public class ServerApp {
     private static final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     public static void main(String[] args) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("\n[SHUTDOWN]Shutting down...");
+
+            String goodbye = gson.toJson(new ServerResponse(true, null, "Сервер закрывается", null, true));
+            for (PrintWriter writer : writers) {
+                writer.println(goodbye);
+            }
+
+            executor.shutdown();
+
+            System.out.println("[SHUTDOWN] All clients received goodbye messages. Bye!");
+        }));
+
         log.info("🚀 TCP Chat Server starting on port 8080...");
 
         try (ServerSocket serverSocket = new ServerSocket(8080)) {
@@ -39,18 +53,35 @@ public class ServerApp {
                 Socket clientSocket = serverSocket.accept();
                 log.info("🔗 New client: {}", clientSocket.getInetAddress());
 
-                executor.submit(() -> handleClient(clientSocket));
+                executor.submit(() -> {
+                    try {
+                        handleClient(clientSocket);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
             }
         } catch (IOException e) {
             log.error("💥 Server crashed", e);
         }
     }
 
-    private static void handleClient(Socket socket) {
+    private static void handleClient(Socket socket) throws IOException {
         Logger clientLog = LoggerUtil.CLIENT_HANDLER;
         clientLog.info("👤 Client {} connected", socket.getInetAddress());
 
         PrintWriter out = null;
+
+        try {
+            socket.setSoTimeout(5 * 60 * 1000);
+        } catch (SocketException e) {
+            System.out.println("Client keep silent too long");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            writers.remove(out);
+            socket.close();
+        }
         try (PrintWriter currentOut = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
 
