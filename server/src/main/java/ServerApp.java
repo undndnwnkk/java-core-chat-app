@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ServerApp {
     private static final Logger log = LoggerUtil.SERVER;
@@ -25,6 +26,7 @@ public class ServerApp {
     private static final UserService userService = new UserService(userRepository);
     private static final MessageService messageService = new MessageService(messageRepository, userService);
     private static final ServerService serverService = new ServerService(userRepository, messageRepository);
+    private static final CopyOnWriteArrayList<PrintWriter> writers = new CopyOnWriteArrayList<>();
 
     public static void main(String[] args) {
         log.info("🚀 TCP Chat Server starting on port 8080...");
@@ -47,8 +49,12 @@ public class ServerApp {
         Logger clientLog = LoggerUtil.CLIENT_HANDLER;
         clientLog.info("👤 Client {} connected", socket.getInetAddress());
 
-        try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        PrintWriter out = null;
+        try (PrintWriter currentOut = new PrintWriter(socket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+            out = currentOut;
+            writers.add(out);
 
             String jsonRequest;
             while ((jsonRequest = in.readLine()) != null) {
@@ -56,12 +62,21 @@ public class ServerApp {
 
                 ServerResponse response = serverService.processRequest(gson, jsonRequest, socket.getInetAddress().toString());
 
-                out.println(gson.toJson(response));
+                if (response.isBroadcast()) {
+                    for (PrintWriter writer : writers) {
+                        writer.println(gson.toJson(response));
+                    }
+                } else {
+                    out.println(gson.toJson(response));
+                }
                 clientLog.debug("📤 Sent: {}", gson.toJson(response));
             }
         } catch (IOException e) {
             clientLog.warn("⚠️ Client {} disconnected", socket.getInetAddress(), e);
         } finally {
+            if (out != null) {
+                writers.remove(out);
+            }
             clientLog.info("👋 Client {} disconnected", socket.getInetAddress());
         }
     }

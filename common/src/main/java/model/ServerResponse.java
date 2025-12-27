@@ -5,16 +5,18 @@ public class ServerResponse {
     private String token;
     private String message;
     private String payload;
+    private boolean broadcast;
 
 
     public ServerResponse() {
     }
 
-    public ServerResponse(boolean success, String token, String message, String payload) {
+    public ServerResponse(boolean success, String token, String message, String payload, boolean broadcast) {
         this.success = success;
         this.token = token;
         this.message = message;
         this.payload = payload;
+        this.broadcast = broadcast;
     }
 
     public boolean isSuccess() {
@@ -49,4 +51,11 @@ public class ServerResponse {
         this.payload = payload;
     }
 
+    public boolean isBroadcast() {
+        return broadcast;
+    }
+
+    public void setBroadcast(boolean broadcast) {
+        this.broadcast = broadcast;
+    }
 }
