@@ -10,13 +10,13 @@ import service.UserService;
 import util.LoggerUtil;
 import org.slf4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ServerApp {
     private static final Logger log = LoggerUtil.SERVER;
@@ -27,6 +27,7 @@ public class ServerApp {
     private static final MessageService messageService = new MessageService(messageRepository, userService);
     private static final ServerService serverService = new ServerService(userRepository, messageRepository);
     private static final CopyOnWriteArrayList<PrintWriter> writers = new CopyOnWriteArrayList<>();
+    private static final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     public static void main(String[] args) {
         log.info("🚀 TCP Chat Server starting on port 8080...");
@@ -38,7 +39,7 @@ public class ServerApp {
                 Socket clientSocket = serverSocket.accept();
                 log.info("🔗 New client: {}", clientSocket.getInetAddress());
 
-                new Thread(() -> handleClient(clientSocket)).start();
+                executor.submit(() -> handleClient(clientSocket));
             }
         } catch (IOException e) {
             log.error("💥 Server crashed", e);
@@ -50,8 +51,8 @@ public class ServerApp {
         clientLog.info("👤 Client {} connected", socket.getInetAddress());
 
         PrintWriter out = null;
-        try (PrintWriter currentOut = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+        try (PrintWriter currentOut = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
 
             out = currentOut;
             writers.add(out);

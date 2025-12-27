@@ -4,6 +4,7 @@ import service.ClientService;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class ClientApp {
@@ -16,8 +17,8 @@ public class ClientApp {
         ClientService clientService = new ClientService(gson, scanner);
 
         try (Socket clientSocket = new Socket(HOST, PORT);
-             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+             PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8))) {
 
             System.out.println("=== Добро пожаловать в TCP Chat! ===");
 

@@ -102,7 +102,9 @@ public class ServerService {
         log.info("💬 {} ({}): '{}'", clientAddress, user.getUsername(), request.getArgs());
         messageService.sendMessage(user, request.getArgs());
 
-        return new ServerResponse(true, null, "Message sent", null, true);
+        String message = user.getUsername() + ": " + request.getArgs();
+
+        return new ServerResponse(true, null, message, null, true);
     }
 
     private ServerResponse handleHistory(ClientCommandRequest request, String clientAddress) {
