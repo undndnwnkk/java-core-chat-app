@@ -1,9 +1,6 @@
 import com.google.gson.Gson;
 import model.ServerResponse;
-import repository.InMemoryMessageRepository;
-import repository.InMemoryUserRepository;
-import repository.MessageRepository;
-import repository.UserRepository;
+import repository.*;
 import service.MessageService;
 import service.ServerService;
 import service.UserService;
@@ -22,10 +19,8 @@ import java.util.concurrent.Executors;
 public class ServerApp {
     private static final Logger log = LoggerUtil.SERVER;
     private static final Gson gson = new Gson();
-    private static final UserRepository userRepository = new InMemoryUserRepository();
-    private static final MessageRepository messageRepository = new InMemoryMessageRepository();
-    private static final UserService userService = new UserService(userRepository);
-    private static final MessageService messageService = new MessageService(messageRepository, userService);
+    private static final UserRepository userRepository = new JdbcUserRepository();
+    private static final MessageRepository messageRepository = new JdbcMessageRepository();
     private static final ServerService serverService = new ServerService(userRepository, messageRepository);
     private static final CopyOnWriteArrayList<PrintWriter> writers = new CopyOnWriteArrayList<>();
     private static final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -54,11 +49,7 @@ public class ServerApp {
                 log.info("🔗 New client: {}", clientSocket.getInetAddress());
 
                 executor.submit(() -> {
-                    try {
-                        handleClient(clientSocket);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    handleClient(clientSocket);
                 });
             }
         } catch (IOException e) {
@@ -66,50 +57,46 @@ public class ServerApp {
         }
     }
 
-    private static void handleClient(Socket socket) throws IOException {
+    private static void handleClient(Socket socket) {
         Logger clientLog = LoggerUtil.CLIENT_HANDLER;
-        clientLog.info("👤 Client {} connected", socket.getInetAddress());
-
         PrintWriter out = null;
 
-        try {
-            socket.setSoTimeout(5 * 60 * 1000);
-        } catch (SocketException e) {
-            System.out.println("Client keep silent too long");
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            writers.remove(out);
-            socket.close();
-        }
         try (PrintWriter currentOut = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
 
+            socket.setSoTimeout(5 * 60 * 1000);
             out = currentOut;
             writers.add(out);
 
+            clientLog.info("👤 Client {} connected", socket.getInetAddress());
+
             String jsonRequest;
             while ((jsonRequest = in.readLine()) != null) {
-                clientLog.debug("📨 Received: {}", jsonRequest);
-
                 ServerResponse response = serverService.processRequest(gson, jsonRequest, socket.getInetAddress().toString());
 
+                String jsonResponse = gson.toJson(response);
                 if (response.isBroadcast()) {
                     for (PrintWriter writer : writers) {
-                        writer.println(gson.toJson(response));
+                        writer.println(jsonResponse);
                     }
                 } else {
-                    out.println(gson.toJson(response));
+                    out.println(jsonResponse);
                 }
-                clientLog.debug("📤 Sent: {}", gson.toJson(response));
             }
+        } catch (java.net.SocketTimeoutException e) {
+            clientLog.warn("⌛ Client {} timed out", socket.getInetAddress());
         } catch (IOException e) {
-            clientLog.warn("⚠️ Client {} disconnected", socket.getInetAddress(), e);
+            clientLog.warn("⚠️ Client {} disconnected with error: {}", socket.getInetAddress(), e.getMessage());
         } finally {
             if (out != null) {
                 writers.remove(out);
             }
-            clientLog.info("👋 Client {} disconnected", socket.getInetAddress());
+            try {
+                socket.close();
+            } catch (IOException e) {
+                log.error("Error closing socket", e);
+            }
+            clientLog.info("👋 Client {} cleanup done", socket.getInetAddress());
         }
     }
 }
